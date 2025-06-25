@@ -8,7 +8,7 @@ const confettiContainer = document.getElementById('confetti-container'); // NOWY
 let normalizedParticipants = []; // Będzie przechowywać WSZYSTKIE wpisy z pliku, każdy jako osobny segment
 let uniqueParticipantCounts = new Map(); // Nowa mapa do przechowywania unikalnych nazw i ich liczby wystąpień
 let currentRotation = 0; // Całkowity obrót koła w stopniach (zawsze rosnący)
-const spinDuration = 7000; // Czas trwania animacji na 7 sekund (7000 milisekund)
+const spinDuration = 15000; // CZAS TRWANIA ANIMACJI ZMIENIONY NA 15 SEKUND (15000 milisekund)
 let isSpinning = false;
 const EPSILON = 0.01; // Mała tolerancja dla porównań liczb zmiennoprzecinkowych
 
