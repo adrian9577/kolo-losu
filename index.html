@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koło Losu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Koło Losu</h1>
+        <div class="controls">
+            <label for="fileInput">Wczytaj osoby z pliku TXT:</label>
+            <input type="file" id="fileInput" accept=".txt">
+            <button id="spinButton" disabled>Zakręć kołem!</button>
+        </div>
+        <div class="wheel-container">
+            <canvas id="luckyWheel" width="600" height="600"></canvas>
+            <div class="pointer"></div>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
