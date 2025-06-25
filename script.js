@@ -7,7 +7,7 @@ const resultDiv = document.getElementById('result');
 let participants = [];
 let normalizedParticipants = [];
 let currentRotation = 0; // Całkowity obrót koła w stopniach (zawsze rosnący)
-const spinDuration = 40000; // Czas trwania animacji w milisekundach (40 sekund)
+const spinDuration = 40000; // Czas trwania animacji w milisekcjach (40 sekund)
 let isSpinning = false;
 
 // Funkcja do rysowania koła
@@ -85,7 +85,8 @@ function drawWheel() {
         // Obliczamy skalę czcionki na podstawie liczby uczestników
         let fontSize = baseFontSize;
         if (normalizedParticipants.length > 20) {
-            fontSize = Math.max(minFontSize, baseFontSize - (normalizedParticipants.length - 20) * 0.05); // Delikatna redukcja
+            // Zmniejszaj o 0.05px na każdego uczestnika powyżej 20
+            fontSize = Math.max(minFontSize, baseFontSize - (normalizedParticipants.length - 20) * 0.05); 
         }
 
         // Dodatkowe zmniejszenie dla bardzo małych segmentów
@@ -133,14 +134,13 @@ fileInput.addEventListener('change', (event) => {
             const text = e.target.result;
             const lines = text.split('\n').filter(line => line.trim() !== '');
             
-            // Dodajemy unikalne ID do każdego uczestnika
             participants = lines.map((line, idx) => {
                 const parts = line.split(','); 
                 if (parts.length === 2) {
                     const name = parts[0].trim();
                     const percentage = parseFloat(parts[1].trim());
                     if (!isNaN(percentage) && percentage >= 0) { 
-                        return { id: idx, name, percentage }; // Dodajemy id
+                        return { id: idx, name, percentage }; 
                     }
                 }
                 return null;
@@ -148,6 +148,12 @@ fileInput.addEventListener('change', (event) => {
 
             if (participants.length > 0) {
                 const totalWeight = participants.reduce((sum, p) => sum + p.percentage, 0);
+                
+                // --- DIAGNOSTYKA ---
+                console.log("--- Wczytywanie pliku ---");
+                console.log("Wczytani uczestnicy (przed normalizacją):", participants);
+                console.log("Suma wag (procentów):", totalWeight);
+                // --- KONIEC DIAGNOSTYKI ---
 
                 if (totalWeight === 0) {
                     alert('Suma procentów (wag) wynosi 0. Nie można wylosować osoby. Proszę popraw plik.');
@@ -159,6 +165,12 @@ fileInput.addEventListener('change', (event) => {
                         normalizedPercentage: p.percentage / totalWeight
                     }));
                     spinButton.disabled = false;
+
+                    // --- DIAGNOSTYKA ---
+                    console.log("Znormalizowani uczestnicy (percentage / totalWeight):", normalizedParticipants);
+                    const sumOfNormalized = normalizedParticipants.reduce((sum, p) => sum + p.normalizedPercentage, 0);
+                    console.log("Suma znormalizowanych procentów (powinno być ~1):", sumOfNormalized);
+                    // --- KONIEC DIAGNOSTYKI ---
                 }
             } else {
                 spinButton.disabled = true;
@@ -182,33 +194,46 @@ fileInput.addEventListener('change', (event) => {
 function getRandomWinner() {
     const randomNumber = Math.random(); 
     let cumulativeNormalizedPercentage = 0;
+
+    // --- DIAGNOSTYKA ---
+    console.log("--- Losowanie ---");
+    console.log("Wylosowana liczba (0-1):", randomNumber);
+    // --- KONIEC DIAGNOSTYKI ---
+
     for (const participant of normalizedParticipants) {
         cumulativeNormalizedPercentage += participant.normalizedPercentage;
+
+        // --- DIAGNOSTYKA ---
+        // console.log(`Sprawdzam: ${participant.name}, Normalized: ${participant.normalizedPercentage.toFixed(4)}, Cumulative: ${cumulativeNormalizedPercentage.toFixed(4)}`);
+        // --- KONIEC DIAGNOSTYKI ---
+
         if (randomNumber <= cumulativeNormalizedPercentage) {
-            return participant; // Zwracamy obiekt uczestnika z jego ID
+            // --- DIAGNOSTYKA ---
+            console.log("Zwycięzca (wylosowany):", participant.name);
+            // --- KONIEC DIAGNOSTYKI ---
+            return participant; 
         }
     }
-    // Awaryjnie, jeśli nic nie zostało wylosowane (powinno się zdarzyć bardzo rzadko)
-    return normalizedParticipants[normalizedParticipants.length - 1];
+    // Awaryjnie, jeśli nic nie zostało wylosowane (powinno się zdarzyć bardzo rzadko, zazwyczaj przez błędy precyzji)
+    // Zawsze zwróć ostatniego, jeśli randomNumber jest bardzo blisko 1.
+    const lastWinner = normalizedParticipants[normalizedParticipants.length - 1];
+    console.warn("Awaryjnie wybrano ostatniego uczestnika. Prawdopodobnie błąd precyzji w losowaniu:", lastWinner);
+    return lastWinner;
 }
 
 // Funkcja do obliczania kąta (w stopniach) dla środka segmentu zwycięzcy
 function getAngleForWinner(winnerId) {
     let angleSum = 0; // Suma kątów poprzednich segmentów w RADIANACH
-    let currentAngleDegrees = 0; // Kąt zwycięzcy w stopniach
 
     for (const participant of normalizedParticipants) {
-        const sliceAngleRadians = participant.normalizedPercentage * 2 * Math.PI; // Kąt bieżącego segmentu w radianach
+        const sliceAngleRadians = participant.normalizedPercentage * 2 * Math.PI; 
         if (participant.id === winnerId) {
-            // Środek tego segmentu w radianach (liczony od 0 na prawo, rosnąco zgodnie z ruchem wskazówek zegara)
             const centerOfWinnerSegmentRadians = angleSum + (sliceAngleRadians / 2);
-            // Kąt w Canvas to 0 prawo, 90 dół, 180 lewo, 270 góra.
-            // My chcemy, żeby strzałka (na górze) wskazywała na środek segmentu.
-            // Pozycja "góra" w systemie Canvas to 270 stopni (lub -90 stopni).
-            // Potrzebujemy obrotu, który przeniesie centerOfWinnerSegmentRadians do pozycji 270 stopni.
-            // Obrót = (270 - obecny kąt)
-            let angleToRotateToTop = (270 - (centerOfWinnerSegmentRadians * 180 / Math.PI)) % 360;
-            if (angleToRotateToTop < 0) angleToRotateToTop += 360; // Upewniamy się, że jest pozytywny
+            // Przeliczamy kąt na stopnie i dostosowujemy do pozycji strzałki (góra, czyli 270 stopni w układzie canvas)
+            // Kąt w Canvas: 0 (prawo), 90 (dół), 180 (lewo), 270 (góra).
+            // Chcemy, żeby środek segmentu znalazł się na pozycji 270 stopni (góra).
+            let angleToRotateToTop = (270 - (centerOfWinnerSegmentRadians * 180 / Math.PI));
+            angleToRotateToTop = (angleToRotateToTop % 360 + 360) % 360; // Zapewnij kąt dodatni od 0 do 360
             return angleToRotateToTop;
         }
         angleSum += sliceAngleRadians;
@@ -228,32 +253,27 @@ function spinWheel() {
     resultDiv.textContent = 'Kręcenie kołem...';
 
     const winner = getRandomWinner();
-    // degreesToSpinForWinner to kąt, o który koło musi się obrócić,
-    // aby środek segmentu zwycięzcy był na górze (pod strzałką).
     const degreesToSpinForWinner = getAngleForWinner(winner.id); 
 
-    // currentRotation to całkowity, narastający obrót w stopniach.
-    // Konwertujemy go na kąt w zakresie 0-360, który jest "widoczny" dla użytkownika.
     let currentVisualAngle = currentRotation % 360;
     if (currentVisualAngle < 0) currentVisualAngle += 360; 
 
-    // Obliczamy różnicę między obecnym widocznym kątem a docelowym kątem.
-    // Jest to "reszta" obrotu, którą musimy wykonać w bieżącym obrocie 360 stopni.
-    // Dążymy do tego, aby degreesToSpinForWinner był nowym "currentVisualAngle" po animacji.
     let remainingSpinForTarget = (degreesToSpinForWinner - currentVisualAngle + 360) % 360;
 
-    // Dodajemy losową liczbę pełnych obrotów, aby koło kręciło się dłużej i nie zatrzymało się od razu.
-    const minimumFullRotations = 5; // Minimalnie 5 pełnych obrotów
-    const additionalRandomRotations = Math.floor(Math.random() * 10); // Dodatkowo do 10 losowych pełnych obrotów (czyli łącznie 5 do 14 pełnych obrotów)
+    const minimumFullRotations = 5; 
+    const additionalRandomRotations = Math.floor(Math.random() * 10); 
     
     const fullRotationsInDegrees = (minimumFullRotations + additionalRandomRotations) * 360;
     
-    // Finalny kąt obrotu
-    // currentRotation (całkowity dotychczasowy obrót) + pełne obroty + reszta do celu
     let targetRotation = currentRotation + fullRotationsInDegrees + remainingSpinForTarget;
     
-    // Losowy, niewielki offset dla bardziej naturalnego zatrzymania (nie idealnie w środku, ale blisko)
-    targetRotation += (Math.random() * 2) - 1; // +/- 1 stopień (minimalne przesunięcie)
+    targetRotation += (Math.random() * 2) - 1; 
+
+    // --- DIAGNOSTYKA ---
+    console.log("Docelowa osoba:", winner.name, "| Id:", winner.id);
+    console.log("Kąt docelowy segmentu (dla strzałki):", degreesToSpinForWinner.toFixed(2), "stopni");
+    console.log("Całkowity obrót koła do celu:", targetRotation.toFixed(2), "stopni");
+    // --- KONIEC DIAGNOSTYKI ---
 
     const startTime = Date.now();
     let animationFrameId;
@@ -262,7 +282,6 @@ function spinWheel() {
         const elapsedTime = Date.now() - startTime;
         let progress = Math.min(elapsedTime / spinDuration, 1);
 
-        // Funkcja ułatwiająca animację (ease-out): zaczyna szybko, kończy wolno
         const easeOutQuint = (t) => 1 - Math.pow(1 - t, 5);
 
         const easedProgress = easeOutQuint(progress);
@@ -274,12 +293,15 @@ function spinWheel() {
         if (progress < 1) {
             animationFrameId = requestAnimationFrame(animate);
         } else {
-            currentRotation = targetRotation; // Ustaw ostateczny kąt po zakończeniu animacji
+            currentRotation = targetRotation; 
             canvas.style.transform = `rotate(${currentRotation}deg)`;
             resultDiv.textContent = `Wylosowana osoba: ${winner.name} (oryginalny procent: ${winner.percentage}%)`;
             spinButton.disabled = false;
             fileInput.disabled = false;
             isSpinning = false;
+            // --- DIAGNOSTYKA ---
+            console.log("Zakończono animację. Wynik:", winner.name);
+            // --- KONIEC DIAGNOSTYKI ---
         }
     }
 
