@@ -7,6 +7,7 @@ body {
     background-color: #f0f0f0;
     margin: 0;
     overflow: hidden; /* Zapobiega przewijaniu przy obracaniu */
+    position: relative; /* Ważne dla pozycjonowania confetti */
 }
 
 .container {
@@ -16,6 +17,8 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
     max-width: 90%; /* Zwiększona szerokość dla lepszego widoku na większych ekranach */
+    position: relative; /* Aby pointer był nad kołem */
+    z-index: 1; /* Kontener na wierzchu confetti */
 }
 
 h1 {
@@ -50,21 +53,21 @@ h1 {
     transition: background-color 0.3s ease;
 }
 
+.controls button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
 .controls button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
 
-.controls button:hover:not(:disabled) {
-    background-color: #45a049;
-}
-
 .wheel-container {
     position: relative;
-    width: 700px; /* Zwiększona szerokość koła */
-    height: 700px; /* Zwiększona wysokość koła */
-    margin: 0 auto 20px auto;
-    border: 5px solid #ccc; /* Grubsza ramka koła */
+    width: 600px; /* Stała szerokość */
+    height: 600px; /* Stała wysokość */
+    margin: 20px auto;
+    border: 5px solid #ccc; /* Delikatna ramka */
     border-radius: 50%;
     overflow: hidden;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
@@ -100,30 +103,37 @@ canvas {
     min-height: 30px; /* Zapobiega "skakaniu" elementów */
 }
 
-/* Responsywność */
-@media (max-width: 768px) {
-    .wheel-container {
-        width: 500px; /* Dopasowanie na mniejsze ekrany */
-        height: 500px;
-    }
+/* NOWE STYLE DLA KONFETTI */
+#confetti-container {
+    position: fixed; /* Konfetti na całej stronie */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Pozwala na klikanie pod konfetti */
+    overflow: hidden; /* Ukrywa konfetti wychodzące poza ekran */
+    z-index: 9999; /* Konfetti na wierzchu wszystkiego */
 }
 
-@media (max-width: 480px) {
-    .wheel-container {
-        width: 350px;
-        height: 350px;
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #FFD700; /* Domyślny kolor */
+    opacity: 0;
+    border-radius: 50%; /* Aby było okrągłe, można zmienić na 0% dla kwadratów */
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+/* Keyframes dla animacji konfetti */
+@keyframes fall {
+    0% {
+        transform: translate(0, 0) rotateZ(0deg);
+        opacity: 1;
     }
-    h1 {
-        font-size: 24px;
-    }
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .controls label, .controls input, .controls button {
-        margin: 5px 0;
-    }
-    #result {
-        font-size: 20px;
+    100% {
+        transform: translate(var(--x-end), var(--y-end)) rotateZ(var(--rotation-end));
+        opacity: 0;
     }
 }
