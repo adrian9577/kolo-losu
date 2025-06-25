@@ -4,25 +4,22 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f0f0f0;
+    background-color: #333333; /* Zmieniono na ciemniejszy kolor tła */
     margin: 0;
     overflow: hidden; /* Zapobiega przewijaniu przy obracaniu */
-    position: relative; /* Ważne dla pozycjonowania confetti */
 }
 
 .container {
-    background-color: #fff;
+    background-color: #444444; /* Nieco jaśniejsze tło dla kontenera, aby było widać różnicę */
     padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Ciemniejszy cień dla lepszego kontrastu */
     text-align: center;
     max-width: 90%; /* Zwiększona szerokość dla lepszego widoku na większych ekranach */
-    position: relative; /* Aby pointer był nad kołem */
-    z-index: 1; /* Kontener na wierzchu confetti */
 }
 
 h1 {
-    color: #333;
+    color: #EEEEEE; /* Jasniejszy kolor tekstu dla nagłówka */
     margin-bottom: 20px;
 }
 
@@ -33,18 +30,21 @@ h1 {
 .controls label {
     margin-right: 10px;
     font-weight: bold;
+    color: #CCCCCC; /* Jasniejszy kolor tekstu dla etykiet */
 }
 
 .controls input[type="file"] {
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #555555; /* Ciemniejsza ramka */
     border-radius: 5px;
     margin-right: 10px;
+    background-color: #555555; /* Ciemniejsze tło dla inputu */
+    color: #EEEEEE; /* Jasniejszy tekst w inputcie */
 }
 
 .controls button {
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #5cb85c;
     color: white;
     border: none;
     border-radius: 5px;
@@ -53,8 +53,8 @@ h1 {
     transition: background-color 0.3s ease;
 }
 
-.controls button:hover:not(:disabled) {
-    background-color: #45a049;
+.controls button:hover {
+    background-color: #4cae4c;
 }
 
 .controls button:disabled {
@@ -64,13 +64,13 @@ h1 {
 
 .wheel-container {
     position: relative;
-    width: 600px; /* Stała szerokość */
-    height: 600px; /* Stała wysokość */
-    margin: 20px auto;
-    border: 5px solid #ccc; /* Delikatna ramka */
+    width: 600px;
+    height: 600px;
+    margin: 40px auto;
+    border: 10px solid #777; /* Ciemniejsza ramka koła */
     border-radius: 50%;
     overflow: hidden;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.4); /* Ciemniejszy cień wewnątrz koła */
 }
 
 canvas {
@@ -99,41 +99,37 @@ canvas {
     margin-top: 20px;
     font-size: 24px;
     font-weight: bold;
-    color: #333;
-    min-height: 30px; /* Zapobiega "skakaniu" elementów */
+    color: #EEEEEE; /* Jasniejszy kolor tekstu dla wyniku */
+    min-height: 30px; /* Zapobiega "skakaniu" strony przy wyświetlaniu wyniku */
 }
 
 /* NOWE STYLE DLA KONFETTI */
 #confetti-container {
-    position: fixed; /* Konfetti na całej stronie */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none; /* Pozwala na klikanie pod konfetti */
-    overflow: hidden; /* Ukrywa konfetti wychodzące poza ekran */
-    z-index: 9999; /* Konfetti na wierzchu wszystkiego */
+    pointer-events: none; /* Pozwala na klikanie elementów pod konfetti */
+    z-index: 9999; /* Upewnia się, że konfetti jest na wierzchu */
+    overflow: hidden; /* Ukrywa konfetti poza obszarem widoku */
 }
 
 .confetti {
     position: absolute;
     width: 10px;
     height: 10px;
-    background-color: #FFD700; /* Domyślny kolor */
-    opacity: 0;
-    border-radius: 50%; /* Aby było okrągłe, można zmienić na 0% dla kwadratów */
-    animation-timing-function: linear;
-    animation-fill-mode: forwards;
+    background-color: #f00; /* Domyślny kolor, zostanie nadpisany JSem */
+    animation: fall 2s linear forwards; /* Domyślna animacja, zostanie nadpisana JSem */
 }
 
-/* Keyframes dla animacji konfetti */
 @keyframes fall {
-    0% {
-        transform: translate(0, 0) rotateZ(0deg);
+    from {
+        transform: translate(0, 0) rotate(0deg);
         opacity: 1;
     }
-    100% {
-        transform: translate(var(--x-end), var(--y-end)) rotateZ(var(--rotation-end));
+    to {
+        transform: translate(var(--x-end), var(--y-end)) rotate(var(--rotation-end));
         opacity: 0;
     }
 }
